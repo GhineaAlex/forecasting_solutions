@@ -97,3 +97,83 @@ acf(diff(diff(log(enplanements), lag = 12)), lag.max = 100)
 pacf(diff(diff(log(enplanements), lag = 12)), lag.max = 100)
 
 #e. visitors
+
+plot(visitors)
+lambda = BoxCox.lambda(visitors)
+plot(BoxCox(visitors, lambda))
+
+Acf(BoxCox(visitors, lambda), lag.max = 100)
+### Avand in vedere modul lent prin care valorile scad lent, seria de date trebuie diferentiata
+
+Pacf(BoxCox(visitors, lambda), lag.max = 100)
+
+plot(diff(BoxCox(visitors, lambda), lag = 12))
+
+Acf(diff(BoxCox(visitors, lambda), lag = 12), lag.max = 100)
+Pacf(diff(BoxCox(visitors, lambda), lag = 12), lag.max = 100)
+
+plot(diff(diff(BoxCox(visitors, lambda), lag = 12)))
+Acf(diff(diff(BoxCox(visitors, lambda), lag = 12)), lag.max = 100)
+Pacf(diff(diff(BoxCox(visitors, lambda), lag = 12)), lag.max = 100)
+
+#EXERCISE 7
+
+#Consider wmurders, the number of women murdered each year (per 100,000 standard population) in the United States.
+
+#a. By studying appropriate graphs of the series in R, find an appropriate ARIMA(p, d, q) model for these data.
+
+autoplot(wmurders)
+
+#nu este nevoie de diferentiere sezoniera , ci doar de o diferentiere simpla
+autoplot(diff(wmurders))
+
+ndiffs(wmurders)
+#conform ndiffs mai avem nevoie de 2 diferentieri
+autoplot(diff(wmurders, differences = 2))
+kpss.test(diff(wmurders, differences = 2))
+#dupa 2 diferentieri seria devine stationara si trece testul kpss
+diff(wmurders, differences = 2) %>% ggtsdisplay()
+
+#Exista valori cu spike uri la lag 1 in cazul PACF si lag 2 in cazul ACF. Vom aplica un model (0,2,2)
+
+#b. Should you include a constant in the model? Explain
+# Nu voi include o constanta in model, ci va fi realizata diferentierea de doua ori. Introducerea unei constante poate crea un trend.
+
+#c. Write this model in terms of backshift operator
+#(1-B)^2Yt = (1 + thetaB + theta2B^2)*epsilont
+
+#d. Fit the model using R and examine the residuals. Is the model satisfactory?
+
+ex_arima <- Arima(wmurders, order = c(0,2,2))
+checkresiduals(ex_arima)
+
+#e. Forecast three times ahead. Check your forecasts by hand to make sure that you know how they have been calculated.
+
+ex_arima <- forecast (exarima, h = 3)
+
+#f. Create a plot of the series with the forecasts and precition intervals for the next three periods shown.
+
+autoplot(ex_arima)
+
+#g. Does auto.arima() give the same model you have chosen? If not, which model do you think is better?
+
+exautoarima <- forecast( auto.arima(wmurders), h = 3)
+
+#EXERCISE 8 
+
+## Consider austa, the total international visitors to Australia (in millions) for the period 1980-2015.
+
+### Use auto.arima() to find an appropriate ARIMA model. What model was selected. 
+### Check that the residuals look like white noise. Plot forecasts for the next 10 periods.
+
+autoplot(austa)
+austa_arima <- forecast(auto.arima(austa), h = 10)
+
+austa_arima$model
+
+
+
+
+
+
+
