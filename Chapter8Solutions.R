@@ -2,7 +2,6 @@
 
 library(fpp2)
 library(xlsx)
-library(rdatamarket)
 library(tseries)
 
 ## Exercise 1
@@ -144,20 +143,20 @@ diff(wmurders, differences = 2) %>% ggtsdisplay()
 
 #d. Fit the model using R and examine the residuals. Is the model satisfactory?
 
-ex_arima <- Arima(wmurders, order = c(0,2,2))
-checkresiduals(ex_arima)
+ex.arima <- Arima(wmurders, order = c(0,2,2))
+checkresiduals(ex.arima)
 
 #e. Forecast three times ahead. Check your forecasts by hand to make sure that you know how they have been calculated.
 
-ex_arima <- forecast (exarima, h = 3)
+ex.arima <- forecast (ex.arima, h = 3)
 
 #f. Create a plot of the series with the forecasts and precition intervals for the next three periods shown.
 
-autoplot(ex_arima)
+autoplot(ex.arima)
 
 #g. Does auto.arima() give the same model you have chosen? If not, which model do you think is better?
 
-exautoarima <- forecast( auto.arima(wmurders), h = 3)
+ex.autoarima <- forecast( auto.arima(wmurders), h = 3)
 
 #EXERCISE 8 
 
@@ -167,13 +166,71 @@ exautoarima <- forecast( auto.arima(wmurders), h = 3)
 ### Check that the residuals look like white noise. Plot forecasts for the next 10 periods.
 
 autoplot(austa)
-austa_arima <- forecast(auto.arima(austa), h = 10)
+austa.arima <- forecast(auto.arima(austa), h = 10)
 
-austa_arima$model
+austa.arima$model
+
+#ARIMA(0,1,1) with drift 
+
+checkresiduals(austa.arima)
+autoplot(austa.arima)
+
+#Plot forecasts from an ARIMA(0,1,1) model with no drift and compare these to part a. Remove the MA term and plot again.
+
+austa.arima011 <- forecast(Arima(austa, order = c(0,1,1)), h = 10)
+autoplot(austa.arima011)
+
+austa.arima010 <- forecast(Arima(austa, order = c(0,1,0)), h = 10)
+autoplot(austa.arima010)
+
+#Plot forecasts from an ARIMA(2,1,3) model with drift. Remove the constant and see what happens.
+austa.arima213 <- forecast(Arima(austa, order = c(2,1,3), include.drift=TRUE), h = 10)
+autoplot(austa.arima213)
+
+austa.arima.drift <- austa.arima213$model$coef[6]
+austa.arima213.nod <- austa.arima213$mean - austa.arima.drift
+
+#Plot forecasts from an ARIMA(0,0,1) model with a constant. Remove the MA term and plot again.
+
+austa.arima001 <- forecast(Arima(austa, order = c(0,0,1), include.constant = TRUE), h = 10)
+autoplot(austa.arima001)
+
+#Plot forecasts from an ARIMA(0,2,1) model with no constant.
+
+austa.arima021 <- forecast(Arima(austa, order = c(0,2,1)), h = 10)
+autoplot(austa.arima021)
+
+#EXERCISE 9 
+
+##For the usgdp series:
+
+##If necessary, find a suitable Box-Cox transformation for the data;
+autoplot(usgdp)
+autoplot(BoxCox(usgdp, BoxCox.lambda(usgdp)))
+us.lambda <- BoxCox.lambda(usgdp)
+##fit a suitable ARIMA model to the transformed data using auto.arima();
+us.auto.arima <- auto.arima(usgdp, lambda = us.lambda)
+autoplot(usgdp) + autolayer(us.auto.arima$fitted)
+#modelul se muleaza bine pe graficul initial usgdp
+##try some other plausible models by experimenting with the orders chosen;
+ndiffs(BoxCox(usgdp, us.lambda))
+#avem nevoie de o diferentiere
+ggtsdisplay(diff(BoxCox(usgdp, us.lambda)))
+
+us.arima110.drift <- Arima(usgdp, lambda = us.lambda, order = c(1,1,0), include.drift = TRUE)
+autoplot(usgdp, "raw") + autolayer(us.arima110$fitted, series = "fit")
+
+##Choose what you think is the best model and check the residual diagnostics;
+accuracy(us.arima110.drift)
+checkresiduals(us.arima110.drift)
+###rezidualele nu sunt distribuite normal 
 
 
+##Produce forecasts of your fitted model. Do the forecasts look reasonable?
+usgdp.autoarima <- forecast(us.auto.arima)
+autoplot(usgdp.autoarima)
 
-
-
-
+##Compare the results with what you would obtain using ets() (with no transformation).
+us.ets <- forecast(ets(usgdp))
+autoplot(us.ets)
 
