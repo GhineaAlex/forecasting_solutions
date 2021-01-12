@@ -234,3 +234,30 @@ autoplot(usgdp.autoarima)
 us.ets <- forecast(ets(usgdp))
 autoplot(us.ets)
 
+#EXERCISE 13
+
+###Choose one of the following seasonal time series: hsales, auscafe, qauselec, qcement, qgas.
+
+autoplot(qcement)
+
+## Aplicam o transformare Boxcox pentru a uniformiza variatiile
+lambda.qcement <- BoxCox.lambda(qcement)
+
+### Are the data stationary? If not, find an appropriate differencing which yields stationary data.
+
+## datele au sezonalitate si un trend ascedent
+ndiffs(qcement)
+
+## avem nevoie de o diferentiere
+kpss.test(diff(qcement, lag = 2))
+
+### Identify a couple of ARIMA models that might be useful in describing the time series. Which of your models is the best according to their AIC values?
+
+ggtsdisplay(diff(BoxCox(qcement, lambda.qcement), lag = 2))
+
+qcement <- auto.arima(qcement, lambda = lambda.qcement)
+
+qcement.arima <- Arima(qcement, lambda = lambda.qcement, order = c(0,1,1), seasonal = c(0,1,1))
+
+## Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the residuals resemble white noise? If not, try to find another ARIMA model which fits better.
+
