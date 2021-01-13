@@ -12,6 +12,7 @@ library(tseries)
 Explain the differences among these figures. Do they all indicate that the data are white noise?
 
 Acestea afiseaza diferite valori critice. Toate graficele indica ca datele sunt white noise.
+Un model Arima(0,0,0) cu toate componentele 0 reprezinta un model white noise si cu datele identic distribuite. Toate graficele sunt white noise deoarece peste 90% din lag este in intervalul delimitat de dreptele punctate.
 
 Why are the critical values at different distances from the mean of zero? Why are the autocorrelations different in each figure when they each refer to white noise?
 
@@ -382,6 +383,60 @@ us.ets <- forecast(ets(usgdp))
 autoplot(us.ets)
 ```
 
+## EXERCITIUL 13
+
+# Choose one of the following seasonal time series: hsales, auscafe, qauselec, qcement, qgas.
+
+```{r qcement}
+autoplot(qcement)
+```
+
+Aplicam o transformare Boxcox pentru a uniformiza variatiile
+
+```{r lambaqcement}
+lambda.qcement <- BoxCox.lambda(qcement)
+```
+
+# Are the data stationary? If not, find an appropriate differencing which yields stationary data.
+
+# Datele au sezonalitate si un trend ascedent
+
+```{r ndiffsqcement}
+ndiffs(qcement)
+```
+
+Avem nevoie de o diferentiere
+
+```{r kpsstestqcement}
+kpss.test(diff(qcement, lag = 2))
+```
+
+# Identify a couple of ARIMA models that might be useful in describing the time series. Which of your models is the best according to their AIC values?
+
+```{r ggtsdisplaylambdaqcement}
+ggtsdisplay(diff(BoxCox(qcement, lambda.qcement), lag = 2))
+
+qcement.arima <- Arima(qcement, lambda = lambda.qcement, order = c(0,1,1), seasonal = c(0,1,1))
+
+qcement.arima
+
+qcement.arima.lambda <- auto.arima(qcement, lambda = lambda.qcement)
+
+qcement.arima.lambda
+```
+
+# Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the residuals resemble white noise? If not, try to find another ARIMA model which fits better.
+
+```{r qcementarima}
+checkresiduals(qcement.arima)
+```
+
+# Forecast the next 24 months of data using your preferred model.
+
+```{r qcementautoarima8}
+qcement.autoarima <- forecast(qcement.arima.lambda, h = 7)
+autoplot(qcement.autoarima)
+```
 
 
 

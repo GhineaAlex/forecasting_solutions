@@ -238,7 +238,7 @@ autoplot(us.ets)
 #EXERCISE 13
 
 ###Choose one of the following seasonal time series: hsales, auscafe, qauselec, qcement, qgas.
-
+qcement
 autoplot(qcement)
 
 ## Aplicam o transformare Boxcox pentru a uniformiza variatiile
@@ -256,9 +256,14 @@ kpss.test(diff(qcement, lag = 2))
 
 ggtsdisplay(diff(BoxCox(qcement, lambda.qcement), lag = 2))
 
-qcement <- auto.arima(qcement, lambda = lambda.qcement)
-
 qcement.arima <- Arima(qcement, lambda = lambda.qcement, order = c(0,1,1), seasonal = c(0,1,1))
+
+qcement.arima
+
+qcement.arima.lambda <- auto.arima(qcement, lambda = lambda.qcement)
+
+qcement.arima.lambda
+
 
 ## Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the residuals resemble white noise? If not, try to find another ARIMA model which fits better.
 
