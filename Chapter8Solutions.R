@@ -148,6 +148,8 @@ checkresiduals(ex.arima)
 #e. Forecast three times ahead. Check your forecasts by hand to make sure that you know how they have been calculated.
 
 ex.arima <- forecast (ex.arima, h = 3)
+ex.arima$mean
+ex.arima$model
 
 #f. Create a plot of the series with the forecasts and precition intervals for the next three periods shown.
 

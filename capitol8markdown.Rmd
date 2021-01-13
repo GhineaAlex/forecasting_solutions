@@ -1,0 +1,388 @@
+---
+title: "Chapter8"
+output: html_document
+---
+```{r}
+library(fpp2)
+library(tseries)
+```
+
+## Exercitiul 1
+
+Explain the differences among these figures. Do they all indicate that the data are white noise?
+
+Acestea afiseaza diferite valori critice. Toate graficele indica ca datele sunt white noise.
+
+Why are the critical values at different distances from the mean of zero? Why are the autocorrelations different in each figure when they each refer to white noise?
+
+Valorile critice demonstreaza faptul ca sunt la distante diferite fata de zero. Distanta diferita este cauzata de numarul de observatii realizate.
+Cu cat sunt mai multe observatii intr-un set de date care indica white noise, cu atat apare mai putin noise in estimarile corelarii.
+
+## Exercitiul 2
+
+```{r ibmclose}
+ggtsdisplay(ibmclose)
+```
+
+Ggtsdisplay ploteaza o serie de timp cu ACF si PACF.
+ACF reprezinta corelarea unei serii cu valorile de lag (decalate).
+PACF gaseste corelarea unei serii cu valorile reziduale.
+
+## Exercitiul 3
+
+For the following series, find an appropriate Box-Cox transformation and order of differencing in order to obtain stationary data.
+
+# usnetelec
+```{r usnetelec}
+plot(usnetelec)
+```
+
+Avand in vedere forma seriei, putem observa o crestere usor liniara
+
+```{r diffusnetelec}
+plot(diff(usnetelec))
+```
+```{r acfusnetelec}
+Acf(diff(usnetelec))
+```
+```{r pacfusnetelec}
+Pacf(diff(usnetelec))
+```
+
+Functiile ACF si PACF arata ca diferentele dintre seriile de date se comporta aproape ca un white noise
+
+# usgdp
+```{r gdp}
+plot(usgdp)
+```
+```{r acfgdp}
+Acf(usgdp)
+```
+```{r pacfgdp}
+Pacf(usgdp)
+```
+
+Exista o valoare care este aproape 1, deci trebuie diferentiat (procesul nefiind non-stationar). Nu putem aplica modelul ARIMA fara diferentiere
+
+```{r lambda}
+lambda = BoxCox.lambda(usgdp)
+```
+```{r plot}
+plot(diff(BoxCox(usgdp,lambda)))
+```
+
+Vom alege o valoare lambda pentru a diferentia cu o anumita putere
+
+```{r acflambda}
+Acf(diff(BoxCox(usgdp, lambda)))
+```
+
+```{r pacflambda}
+Pacf(diff(BoxCox(usgdp, lambda)))
+```
+
+Dupa diferentierea realizata cu valoarea lambda putem observa ca seria de timp este stationara
+
+# mcopper
+
+```{r mcopper}
+plot(mcopper)
+```
+
+```{r acfmcopper}
+Acf(mcopper)
+```
+
+```{r pacfmcopper}
+Pacf(mcopper)
+```
+
+```{r lambdacopper}
+lambda = BoxCox.lambda(mcopper)
+```
+
+```{r plotlambda}
+plot(diff(BoxCox(mcopper, lambda)))
+```
+
+```{r acfcopper}
+Acf(diff(BoxCox(mcopper, lambda)))
+```
+
+ACF scade rapid cu cateva perturbatii pentru valorile mari de lag
+
+```{r pacfcopper}
+Pacf(diff(BoxCox(mcopper, lambda)))
+```
+
+ACF si PACF sunt stationare
+
+# enplanements
+
+```{r enplanements}
+plot(enplanements)
+plot(log(enplanements))
+Acf(log(enplanements))
+Pacf(log(enplanements))
+```
+
+Datele trebuie diferentiate pentru a aplica modelul ARIMA. Cand aplicam log pe ACF, datele nu converg catre valori critice
+
+
+Seria de timp trebuie diferentiata pentru a aplica modelul Arima. Datele sunt sezoniere si trebuie diferentiate cu un lag egal cu numarul de sezoane
+
+
+```{r diffenplanements}
+plot(diff(log(enplanements), lag = 12))
+acf(diff(log(enplanements), lag = 12))
+pacf(diff(log(enplanements), lag = 12))
+```
+
+Trebuie diferentiate de doua ori
+
+```{r 2diffenaplenements}
+plot(diff(diff(log(enplanements), lag = 12)))
+acf(diff(diff(log(enplanements), lag = 12)))
+pacf(diff(diff(log(enplanements), lag = 12)))
+```
+
+# visitors
+
+```{r visitors}
+plot(visitors)
+lambda = BoxCox.lambda(visitors)
+plot(BoxCox(visitors, lambda))
+Acf(BoxCox(visitors, lambda))
+```
+
+Avand in vedere modul lent prin care valorile scad lent, seria de date trebuie diferentiata
+
+```{r diffvisitors}
+Pacf(BoxCox(visitors, lambda))
+
+plot(diff(BoxCox(visitors, lambda), lag = 12))
+
+Acf(diff(BoxCox(visitors, lambda), lag = 12))
+Pacf(diff(BoxCox(visitors, lambda), lag = 12))
+
+plot(diff(diff(BoxCox(visitors, lambda), lag = 12)))
+Acf(diff(diff(BoxCox(visitors, lambda), lag = 12)))
+Pacf(diff(diff(BoxCox(visitors, lambda), lag = 12)))
+```
+
+## Exercitiul 7
+
+Consider wmurders, the number of women murdered each year (per 100,000 standard population) in the United States.
+
+# By studying appropriate graphs of the series in R, find an appropriate ARIMA(p, d, q) model for these data.
+
+```{r wmuders}
+autoplot(wmurders)
+```
+
+Este nevoie doar de o diferentiere simpla
+
+```{r autoplotmurders}
+autoplot(diff(wmurders))
+ndiffs(wmurders)
+```
+
+Mai este nevoie de doua diferentieri pentru a face seria de timp stationara
+
+```{r autoplotdiffmurders}
+autoplot(diff(wmurders, differences = 2))
+kpss.test(diff(wmurders, differences = 2))
+```
+
+Dupa cele doua diferentieri, testul kpss este trecut
+
+```{r wmurdersdiff}
+diff(wmurders, differences = 2) %>% ggtsdisplay()
+```
+
+Exista valori care ajung la lag 1 in cazul PACF si lag 2 inc azul ACF. 
+Vom aplica un model 0, 2, 2
+
+# Should you include a constant in the model? Explain
+
+Nu voi include o constanta in model, ci va fi realizata diferentierea de doua ori. Introducerea unei constante poate crea un trend.
+
+# Write this model in terms of backshift operator
+
+
+(1-B)^2Yt = (1 + thetaB + theta2B^2)*epsilont
+
+# Fit the model using R and examine the residuals. Is the model satisfactory?
+
+```{r wmurdersresiduals}
+ex.arima <- Arima(wmurders, order = c(0,2,2))
+checkresiduals(ex.arima)
+```
+
+# Forecast three times ahead. Check your forecasts by hand to make sure that you know how they have been calculated.
+
+```{r exarima}
+ex.arima <- forecast (ex.arima, h = 3)
+```
+
+Vom face o predictie cu o functie Arima
+
+```{r arimamean}
+ex.arima$mean
+ex.arima$model
+```
+
+Formula va fi:
+
+(1 - B)^2Yt = (1 - 1.0181B + 0.147B^2)epsilont
+Yt = 2Yt-1 - Yt-2 + epsilont - 1.0181epsliont-1 + 0.147epsilont-2
+
+
+```{r formula}
+len <- length(wmurders)
+e <- ex.arima$residuals
+
+f1 <- 2*wmurders[len] - wmurders[len - 1] - 1.0181*e[len] + 0.147*e[len - 1]
+f2 <- 2*f1 - wmurders[len] + 0.147*e[len]
+f3 <- 2*f2 - f1
+
+c(f1,f2,f3)
+
+```
+
+# Create a plot of the series with the forecasts and precition intervals for the next three periods shown.
+
+```{r autoplotarima}
+autoplot(ex.arima)
+```
+
+# Does auto.arima() give the same model you have chosen? If not, which model do you think is better?
+
+```{r autoarima}
+ex.autoarima <- forecast( auto.arima(wmurders), h = 3)
+
+accuracy(ex.arima)
+accuracy(ex.autoarima)
+```
+
+Valorile date de 0,2,2 sunt mai bune (luand in considerare rezultate date de accuracy)
+
+## Exercitiul 8
+
+Consider the total international visitors to Australia (in millions) for the period 1980-2015. (Data set austa.)
+
+# Use auto.arima to find an appropriate ARIMA model. What model was selected. Check that the residuals look like white noise. Plot forecasts for the next 10 periods.
+
+```{r autoplotausta}
+autoplot(austa)
+austa.arima <- forecast(auto.arima(austa), h = 10)
+
+austa.arima$model
+```
+
+ARIMA(0,1,1) with drift 
+
+```{r autoresiduals}
+checkresiduals(austa.arima)
+autoplot(austa.arima)
+```
+
+# Plot forecasts from an ARIMA(0,1,1) model with no drift and compare these to part a. Remove the MA term and plot again.
+
+```{r autoarima011}
+austa.arima011 <- forecast(Arima(austa, order = c(0,1,1)), h = 10)
+autoplot(austa.arima011)
+
+austa.arima010 <- forecast(Arima(austa, order = c(0,1,0)), h = 10)
+autoplot(austa.arima010)
+```
+
+
+# Plot forecasts from an ARIMA(2,1,3) model with drift. Remove the constant and see what happens.
+
+```{r austaarima213}
+austa.arima213 <- forecast(Arima(austa, order = c(2,1,3), include.drift=TRUE), h = 10)
+autoplot(austa.arima213)
+
+austa.arima.drift <- austa.arima213$model$coef[6]
+austa.arima213.nod <- austa.arima213$mean - austa.arima.drift
+```
+
+# Plot forecasts from an ARIMA(0,0,1) model with a constant. Remove the MA term and plot again.
+
+```{r austaarima001}
+austa.arima001 <- forecast(Arima(austa, order = c(0,0,1), include.constant = TRUE), h = 10)
+autoplot(austa.arima001)
+```
+
+# Plot forecasts from an ARIMA(0,2,1) model with no constant.
+
+```{r austaarima021}
+austa.arima021 <- forecast(Arima(austa, order = c(0,2,1)), h = 10)
+autoplot(austa.arima021)
+```
+
+## Exercitiul 9
+
+# For the usgdp series. If necessary, find a suitable Box-Cox transformation for the data;
+
+```{r usgdpplot}
+autoplot(usgdp)
+autoplot(BoxCox(usgdp, BoxCox.lambda(usgdp)))
+us.lambda <- BoxCox.lambda(usgdp)
+```
+
+# Fit a suitable ARIMA model to the transformed data using auto.arima();
+
+```{r usgdpautoarima}
+us.auto.arima <- auto.arima(usgdp, lambda = us.lambda)
+autoplot(usgdp) + autolayer(us.auto.arima$fitted)
+```
+
+Modelul se muleaza bine pe graficul initial usgdp
+
+# Try some other plausible models by experimenting with the orders chosen;
+
+```{r ndiffsusgdp}
+ndiffs(BoxCox(usgdp, us.lambda))
+```
+
+Avem nevoie de o diferentiere
+
+```{r ggtsdisplaydiffusgdp}
+ggtsdisplay(diff(BoxCox(usgdp, us.lambda)))
+```
+
+```{r arima110}
+us.arima110drift <- Arima(usgdp, lambda = us.lambda, order = c(1,1,0), include.drift = TRUE)
+autoplot(usgdp, "raw") + autolayer(us.arima110drift$fitted, series = "fit")
+```
+
+# Choose what you think is the best model and check the residual diagnostics;
+
+```{r accuracyarima110}
+accuracy(us.arima110drift)
+checkresiduals(us.arima110drift)
+```
+
+Rezidualele nu sunt distribuite normal 
+
+
+# Produce forecasts of your fitted model. Do the forecasts look reasonable?
+
+```{r usgdpautoarimaplot}
+usgdp.autoarima <- forecast(us.auto.arima)
+autoplot(usgdp.autoarima)
+```
+
+# Compare the results with what you would obtain using ets() (with no transformation).
+
+```{r etsusgdp}
+us.ets <- forecast(ets(usgdp))
+autoplot(us.ets)
+```
+
+
+
+
+
