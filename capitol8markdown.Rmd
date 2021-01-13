@@ -4,6 +4,7 @@ output: html_document
 ---
 ```{r}
 library(fpp2)
+library(xlsx)
 library(tseries)
 ```
 
@@ -169,6 +170,151 @@ Pacf(diff(BoxCox(visitors, lambda), lag = 12))
 plot(diff(diff(BoxCox(visitors, lambda), lag = 12)))
 Acf(diff(diff(BoxCox(visitors, lambda), lag = 12)))
 Pacf(diff(diff(BoxCox(visitors, lambda), lag = 12)))
+```
+
+# Exercitiul 4. For the enplanements data, write down the differences you chose above using backshift operator notation.
+```{r}
+# ARIMA(0, 1, 0)(0, 1, 0)12
+
+# (1 - B)(1 - B^12)yt = et
+```
+
+# Exercitiul 5. For your retail data (from Exercise 3 in Section 2.10), find the appropriate order of differencing (after transformation if necessary) to obtain stationary data.
+```{r init_data}
+# citeste datele din sheet
+retail <- read.xlsx("retail.xlsx",
+                    startRow = 2,
+                    sheetIndex = 1)
+
+# creeaza time-series object
+retail.ts <- ts(retail[,"A3349873A"], 
+                frequency=12, 
+                start=c(1982,4))
+
+```
+
+```{r plot_pre_diff, echo=FALSE}
+# afiseaza datele pe grafic. datele au un trend crescator si o sezonalitate puternica.
+autoplot(retail.ts)
+```
+
+```{r test-pre-diff}
+# testam stationaritatea datelor 
+kpss.test(
+  retail.ts
+)
+```
+
+```{r}
+# estimam numarul de diferentieri necesare pentru a obtine date stationare
+ndiffs(retail.ts)
+# estimam numarul de diferentieri de sezonalitate necesare pentru a obtine date stationare
+nsdiffs(retail.ts)
+
+# aplicam o diferentiere de ordinul 1 si o diferentiere de sezonalitate (lag = 12)
+diffed.ts <- diff(
+  diff(
+    retail.ts,
+    lag = 12
+  )
+)
+```
+
+```{r plot_post_diff, echo=FALSE}
+# testam stationaritatea datelor post-diferentiere
+kpss.test(diffed.ts)
+```
+
+# Exercitiul 6. Use R to simulate and plot some data from simple ARIMA models.
+
+## a) Use the following R code to generate data from an AR(1) model with phi1 = 0.6 and sigma^2 = 1. The process starts with y1 = 0
+
+``` {r}
+y <- ts(numeric(100))
+e <- rnorm(100)
+for(i in 2:100)
+  y[i] <- 0.6*y[i-1] + e[i]
+return(y)
+```
+
+## b) Produce a time plot for the series. How does the plot change as you change phi1?
+
+``` {r}
+ar1Func <- function(phi1){
+  y <- ts(numeric(100))
+  e <- rnorm(100)
+  for(i in 2:100){
+    y[i] <- phi1*y[i-1] + e[i]
+  }
+  return(y)
+}
+
+# variatia creste odata cu phi
+autoplot(ar1Func(0.2), series = "0.2", size = 1) +
+  autolayer(ar1Func(0.4), series = "0.4", size = 1) +
+  autolayer(ar1Func(0.6), series = "0.6", size = 1) +
+  autolayer(ar1Func(0.8), series = "0.8", size = 1)
+```
+
+## c) Write your own code to generate data from an MA(1) model with theta1 = 0.6 and sigma^2 = 1
+
+``` {r}
+y_ma <- ts(numeric(100))
+e_ma <- rnorm(100)
+for(i in 2:100){
+  y_ma[i] <- 0.6 * e_ma[i-1] + e_ma[i]
+}
+return(y_ma)
+```
+
+## d) Produce a time plot for the series. How does the plot change as you change theta1?
+
+``` {r}
+ma1Func <- function(theta1){
+  y <- ts(numeric(100))
+  e <- rnorm(100)
+  for(i in 2:100){
+    y[i] <- theta1*e[i-1] + e[i]
+  }
+  return(y)
+}
+
+# variatia creste odata cu theta
+autoplot(ma1Func(0.2), series = "0.2", size = 1) +
+  autolayer(ma1Func(0.4), series = "0.4", size = 1) +
+  autolayer(ma1Func(0.6), series = "0.6", size = 1) +
+  autolayer(ma1Func(0.8), series = "0.8", size = 1)
+```
+
+## e) Generate data from an ARMA(1,1) model with phi1 = 0.6, theta1 = 0.6 and sigma^2 = 1
+
+``` {r}
+y_arma <- ts(numeric(100))
+e_arma <- rnorm(100) 
+for(i in 2:100){
+  y_arma[i] <- 0.6*y_arma[i-1] + 0.6*e_arma[i-1] + e_arma[i]
+}
+return(y_arma)
+```
+
+## f)  Generate data from an AR(2) model with phi1 = -0.8, phi2 = 0.3 and sigma^2 = 1. (Note that these parameters will give a non-stationary series.)
+
+``` {r}
+y_ar2 <- ts(numeric(100))
+e_ar2 <- rnorm(100)
+for(i in 3:100){
+  y_ar2[i] <- -0.8*y_ar2[i-1] + 0.3*y_ar2[i-2] + e_ar2[i]
+}
+return(y_ar2)
+```
+
+## g) Graph the latter two series and compare them.
+
+``` {r}
+# AR(2) -> ph1 < 0 => datele au oscilat in jurul mediei. datele sunt non-stationare
+# ARMA(1, 1) - a produs date stationare
+autoplot(y_arma, series = "ARMA(1, 1)", size = 1) +
+  autolayer(y_ar2, series = "AR(2)", size = 1)
 ```
 
 ## Exercitiul 7
@@ -383,6 +529,173 @@ us.ets <- forecast(ets(usgdp))
 autoplot(us.ets)
 ```
 
+# Exercitiul 10. Consider austourists, the quarterly visitor nights (in millions) spent by international tourists to Australia for the period 1999–2015.
+
+## a) Describe the time plot.
+
+``` {r}
+# datele au un trend crescator si o sezonalitate puternica
+autoplot(austourists)
+```
+
+## b) What can you learn from the ACF graph?
+
+``` {r}
+# autocorelarile sunt in descrestere. valorile de la lagurile multiplu de 4 sunt mai mari
+Acf(austourists)
+```
+
+## c) What can you learn from the PACF graph?
+
+``` {r}
+# exista 4 spike-uri semnificative la primele 4 lag-uri si inca unul la lag-ul 8 ce ar putea fi legat de sezonalitate
+Pacf(austourists)
+```
+
+## d) Produce plots of the seasonally differenced data  (1 - B^4)Yt. What model do these graphs suggest?# datele au un trend crescator si o sezonalitate puternica
+``` {r}
+austourists.lag4diff = diff(austourists, lag = 4)
+
+# datele pare inca nestationare, deci mai aplicam o diferentiere 
+autoplot(austourists.lag4diff)
+autoplot(diff(austourists.lag4diff))
+```
+``` {r}
+# ACF are un spike semnificativ la lag-ul 1 -> componenta MA(1) pt ARIMA fara sezonalitate
+# ACF are un spike semnificativ la lag-ul 4 -> componenta MA(1) pt ARIMA cu sezonalitate
+Acf(austourists.lag4diff)
+Pacf(austourists.lag4diff)
+```
+``` {r}
+# putem merge pe un model ARIMA(1, 1, 0)(1, 1, 0)[4]
+Arima(
+  austourists, 
+  order = c(1, 1, 0), 
+  seasonal = c(1, 1, 0)
+) # => AIC=295.47
+```
+
+## e) Does auto.arima() give the same model that you chose? If not, which model do you think is better?
+``` {r}
+auto.arima(austourists) # => ARIMA(1,0,0)(1,1,0)[4]
+                        # => AIC=292.97 => modelul oferit de auto.arima() este mai bun
+```
+
+# Exercitiul 11. Consider usmelec, the total net generation of electricity (in billion kilowatt hours) by the U.S. electric industry (monthly for the period January 1973 – June 2013). In general there are two peaks per year: in mid-summer and mid-winter
+
+## a) Examine the 12-month moving average of this series to see what kind of trend is involved.
+
+``` {r}
+usmelec_ma12 <- ma(usmelec, order = 12)
+
+# trend crescator pana in ~2008
+autoplot(usmelec, series = "Data") +
+  autolayer(usmelec_ma12, series = "ma12")
+```
+
+## c) Are the data stationary? If not, find an appropriate differencing which yields stationary data.
+
+``` {r}
+# datele nu sunt stationare
+ndiffs(usmelec)
+nsdiffs(usmelec)
+# => diferentiere de ordinul 1 si o diferentiere de sezonalitate (lag = 12)
+```
+
+## d) Identify a couple of ARIMA models that might be useful in describing the time series. Which of your models is the best according to their AIC values?
+
+``` {r}
+usmelec.diff = diff(diff(
+  usmelec,
+  lag=12
+))
+autoplot(usmelec.diff)
+Acf(usmelec.diff)
+Pacf(usmelec.diff)
+```
+
+``` {r}
+# ARIMA(0,1,3)(0,1,1)12 => 
+Arima(
+  usmelec,
+  order = c(0, 1, 3),
+  seasonal = c(0, 1, 1)
+) # => AIC = 3279.11
+```
+
+``` {r}
+# ARIMA(0,1,2)(0,1,1)12
+Arima(
+  usmelec,
+  order = c(0, 1, 2),
+  seasonal = c(0, 1, 1)
+) # => AIC = 3277.96
+```
+
+``` {r}
+auto.arima(usmelec.diff) # => ARIMA(1,0,1)(0,0,1)[12],  AIC=3276.71
+```
+
+## e) Estimate the parameters of your best model and do diagnostic testing on the residuals. Do the residuals resemble white noise? If not, try to find another ARIMA model which fits better.
+``` {r}
+best_found_arima = Arima(
+  usmelec,
+  order = c(0, 1, 2),
+  seasonal = c(0, 1, 1)
+)
+
+checkresiduals(best_found_arima)
+```
+
+
+# Exercitiul 12. For the mcopper data:
+
+## a) if necessary, find a suitable Box-Cox transformation for the data
+``` {r}
+# datele nu au sezonalitate
+autoplot(mcopper)
+# transformarea BoxCox face ca variatiile sa fie mai echilibrate
+autoplot(BoxCox(mcopper, BoxCox.lambda(mcopper)))
+lambda_mcopper <- BoxCox.lambda(mcopper)
+```
+
+## b) fit a suitable ARIMA model to the transformed data using auto.arima()
+``` {r}
+mcopper.autoarima <- auto.arima(
+  mcopper,
+  lambda = lambda_mcopper
+) # ARIMA(0,1,1), AIC=-86.1
+return(mcopper.autoarima)
+```
+
+## c. try some other plausible models by experimenting with the orders chosen
+``` {r}
+Arima(
+  mcopper,
+  order = c(0, 1, 3),
+  lambda = lambda_mcopper
+) # AIC=-82.21
+```
+
+## d. choose what you think is the best model and check the residual diagnostics
+``` {r}
+checkresiduals(mcopper.autoarima)
+```
+
+## e. produce forecasts of your fitted model. Do the forecasts look reasonable?
+``` {r}
+autoplot(forecast(
+  mcopper.autoarima
+))
+```
+
+## f. compare the results with what you would obtain using ets()
+``` {r}
+autoplot(forecast(
+  ets(mcopper)
+))
+```
+
 ## EXERCITIUL 13
 
 # Choose one of the following seasonal time series: hsales, auscafe, qauselec, qcement, qgas.
@@ -438,6 +751,23 @@ qcement.autoarima <- forecast(qcement.arima.lambda, h = 7)
 autoplot(qcement.autoarima)
 ```
 
+# Exercitiul 14. For the same time series you used in the previous exercise, try using a non-seasonal model applied to the seasonally adjusted data obtained from STL. The stlf() function will make the calculations easy (with method="arima"). Compare the forecasts with those obtained in the previous exercise. Which do you think is the best approach?
+``` {r}
+fc_qauselec_stlf <- stlf(
+  qcement, lambda = BoxCox.lambda(qcement), method = "arima"
+)
+autoplot(fc_qauselec_stlf)
+```
 
+# Exercitiul 15. For your retail time series (Exercise 5 above)
+
+## a. develop an appropriate seasonal ARIMA model
+``` {r}
+auto.arima(retail.ts) # ARIMA(1,0,2)(0,1,1)[12]
+
+autoplot(forecast(
+  auto.arima(retail.ts)
+))
+```
 
 
