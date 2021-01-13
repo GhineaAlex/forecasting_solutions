@@ -1,7 +1,6 @@
 ## Used libraries
 
 library(fpp2)
-library(xlsx)
 library(tseries)
 
 ## Exercise 1
@@ -34,14 +33,14 @@ Acf(diff(usnetelec), lag.max = 100)
 
 Pacf(diff(usnetelec), lag.max = 100)
 
-#Functiile ACF si PACF arata ca diferentele dintre seriile de date se comporta aproape ca un white
+#Functiile ACF si PACF arata ca diferentele dintre seriile de date se comporta aproape ca un white noise
 
 #b. usgdp
 
 plot(usgdp)
-Acf(usgdp, lag.max = 100)
+Acf(usgdp)
 
-Pacf(usgdp, lag.max = 100)
+Pacf(usgdp)
 
 #Exista o valoare care este aproape 1, deci trebuie diferentiat (procesul nefiind non-stationar). Nu putem aplica modelul ARIMA fara diferentiere
 
@@ -50,8 +49,8 @@ plot(diff(BoxCox(usgdp,lambda)))
 
 #Vom alege o valoare lambda pentru a diferentia cu o anumita putere
 
-Acf(diff(BoxCox(usgdp, lambda)), lag.max = 100)
-Pacf(diff(BoxCox(usgdp, lambda)), lag.max = 100)
+Acf(diff(BoxCox(usgdp, lambda)))
+Pacf(diff(BoxCox(usgdp, lambda)))
 
 #Dupa diferentierea realizata cu valoarea lambda putem observa ca seria de timp este stationara
 
@@ -59,16 +58,16 @@ Pacf(diff(BoxCox(usgdp, lambda)), lag.max = 100)
 
 plot(mcopper)
 
-Acf(mcopper, lag.max = 100)
+Acf(mcopper)
 
-Pacf(mcopper, lag.max = 100)
+Pacf(mcopper)
 
 lambda = BoxCox.lambda(mcopper)
 plot(diff(BoxCox(mcopper, lambda)))
 
-Acf(diff(BoxCox(mcopper, lambda)), lag.max = 100)
+Acf(diff(BoxCox(mcopper, lambda)))
 ### ACF scade rapid cu cateva perturbatii pentru valorile mari de lag
-Pacf(diff(BoxCox(mcopper, lambda)), lag.max = 100)
+Pacf(diff(BoxCox(mcopper, lambda)))
 
 ### ACF si PACF sunt stationare
 
@@ -77,23 +76,23 @@ Pacf(diff(BoxCox(mcopper, lambda)), lag.max = 100)
 plot(enplanements)
 plot(log(enplanements))
 
-Acf(log(enplanements), lag.max = 100)
+Acf(log(enplanements))
 
 ### Datele trebuie diferentiate pentru a aplica modelul ARIMA. Cand aplicam log pe ACF, datele nu converg catre valori critice
 
-Pacf(log(enplanements), lag.max = 100)
+Pacf(log(enplanements))
 
 ### Seria de timp trebuie diferentiata pentru a aplica modelul Arima. Datele sunt sezoniere si trebuie diferentiate cu un lag egal cu numarul de sezoane
 plot(diff(log(enplanements), lag = 12))
-acf(diff(log(enplanements), lag = 12), lag.max = 100)
-pacf(diff(log(enplanements), lag = 12), lag.max = 100)
+acf(diff(log(enplanements), lag = 12))
+pacf(diff(log(enplanements), lag = 12))
 
 ### Trebuie diferentiate de doua ori
 
 plot(diff(diff(log(enplanements), lag = 12)))
 
-acf(diff(diff(log(enplanements), lag = 12)), lag.max = 100)
-pacf(diff(diff(log(enplanements), lag = 12)), lag.max = 100)
+acf(diff(diff(log(enplanements), lag = 12)))
+pacf(diff(diff(log(enplanements), lag = 12)))
 
 #e. visitors
 
@@ -101,19 +100,19 @@ plot(visitors)
 lambda = BoxCox.lambda(visitors)
 plot(BoxCox(visitors, lambda))
 
-Acf(BoxCox(visitors, lambda), lag.max = 100)
+Acf(BoxCox(visitors, lambda))
 ### Avand in vedere modul lent prin care valorile scad lent, seria de date trebuie diferentiata
 
-Pacf(BoxCox(visitors, lambda), lag.max = 100)
+Pacf(BoxCox(visitors, lambda))
 
 plot(diff(BoxCox(visitors, lambda), lag = 12))
 
-Acf(diff(BoxCox(visitors, lambda), lag = 12), lag.max = 100)
-Pacf(diff(BoxCox(visitors, lambda), lag = 12), lag.max = 100)
+Acf(diff(BoxCox(visitors, lambda), lag = 12))
+Pacf(diff(BoxCox(visitors, lambda), lag = 12))
 
 plot(diff(diff(BoxCox(visitors, lambda), lag = 12)))
-Acf(diff(diff(BoxCox(visitors, lambda), lag = 12)), lag.max = 100)
-Pacf(diff(diff(BoxCox(visitors, lambda), lag = 12)), lag.max = 100)
+Acf(diff(diff(BoxCox(visitors, lambda), lag = 12)))
+Pacf(diff(diff(BoxCox(visitors, lambda), lag = 12)))
 
 #EXERCISE 7
 
